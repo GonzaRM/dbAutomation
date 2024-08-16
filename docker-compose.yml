@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build: .  # Construyo la imagen a partir del Dockerfile en el directorio actual
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes: 
+      - ./app:/app  # Monto el directorio 'app' local en el contenedor para persistir la base de datos
+    depends_on:
+      - db  
+
+  db:
+    image: sqlite3  # Uso una imagen de SQLite
+    volumes:
+      - ./data:/data  # Monta un directorio local para almacenar el archivo de la base de datos
+    command: sqlite3 /data/roles.db  # Crea la base de datos si no existe

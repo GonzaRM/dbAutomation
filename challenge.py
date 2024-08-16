@@ -1,14 +1,21 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + '/app/roles.db' 
-app.config["JWT_SECRET_KEY"] = "meli2024*"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + '/app/roles.db' # DB Path
+app.config["JWT_SECRET_KEY"] = os.environ.get('JWT_SECRET_KEY')  # Clave secreta JWT
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+
+# Obtener credenciales de las variables de entorno
+USERNAME_SECRET = os.environ.get('USERNAME_SECRET')
+PASSWORD_SECRET = os.environ.get('PASSWORD_SECRET')
 
 # Endpoint para login (genera un token JWT)
 @app.route('/login', methods=['POST'])
@@ -19,9 +26,11 @@ def login():
     # 1. Validación de entrada:
     if not username or not password:
         return jsonify({"msg": "Missing username or password"}), 400  # Bad Request
-
-    user = User.query.filter_by(username=username).first()
-
+    
+    # Comparo con las credenciales almacenadas en variables de entorno
+    if username != USERNAME_SECRET or password != PASSWORD_SECRET:
+        return jsonify({"msg": "Invalid username or password"}), 401 #Unauth
+    
     # 4. Generación del token JWT:
     access_token = create_access_token(identity=username)
     return jsonify(access_token=access_token)
@@ -45,6 +54,8 @@ class Role(db.Model):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+
 
 class UserRole(db.Model):
     id = db.Column(db.Integer, primary_key=True)
