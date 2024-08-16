@@ -12,5 +12,8 @@ COPY roles.db /app/roles.db
 # Instalo las dependencias
 RUN pip install --no-cache-dir Flask Flask-SQLAlchemy Flask-JWT-Extended
 
+# Establece variables de entorno a partir de los secretos de GitHub
+ENV JWT_SECRET_KEY=$JWT_SECRET_KEY
+
 # Ejecuto la aplicación
 CMD ["python", "challenge.py"]
